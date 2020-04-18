@@ -22,14 +22,14 @@ type cpu_registers is record
   r2: byte;
   r3: byte;
   r4: byte;
-  ip: address
+  ip: address;
 end record cpu_registers;
 
 
 -- memory gives data, and readability
 type cpu_memory_in  is record
   data: byte;
-  rd:   std_logic
+  rd:   std_logic;
 end record cpu_memory_in;
 
 -- memory takes address, data, and command
@@ -37,7 +37,7 @@ type cpu_memory_out is record
   addr: address;
   data: byte;
   rd:   std_logic;
-  wr:   std_logic
+  wr:   std_logic;
 end record cpu_memory_out;
 
 
@@ -54,7 +54,7 @@ type cpu_state is (
 
 -- you can ask it to run
 type cpu_state_in is record
-  run: std_logic
+  run: std_logic;
 end record cpu_state_in;
 
 -- and it will indicate its status
@@ -62,30 +62,61 @@ type cpu_state_out is record
   run:     std_logic;
   fetch:   std_logic;
   decode:  std_logic;
-  execute: std_logic
+  execute: std_logic;
 end record cpu_state_out;
 
 
 -- input interface
 type cpu_input is record
   state: cpu_state_in;
-  mem:   cpu_memory_in
+  mem:   cpu_memory_in;
 end record cpu_input;
 
 -- output interface
 type cpu_output is record
   state: cpu_state_out;
   mem:   cpu_memory_out;
-  reg:   cpu_registers
+  reg:   cpu_registers;
 end record cpu_output;  
 
 type cpu_internal is record
   state: cpu_state;
-  reg:   cpu_registers
+  reg:   cpu_registers;
 end record cpu_internal;
+
+
+type alu_command is (
+  alu_and,
+  alu_or,
+  alu_not,
+  alu_xor,
+  alu_add,
+  alu_sub,
+  alu_mul,
+  alu_div
+);
+
+
+procedure cpu_registers_reset (
+  signal r: out cpu_registers);
 
 end package types;
 
+
+
+package body types is
+
+procedure cpu_registers_reset (
+  signal r: out cpu_registers) is
+begin
+  r.r0 <= 0;
+  r.r1 <= 0;
+  r.r2 <= 0;
+  r.r3 <= 0;
+  r.ip <= 0;
+end procedure cpu_registers_reset;
+
+end package body types;
 
 
 -- Wrote this after following:
