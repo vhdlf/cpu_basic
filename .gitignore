@@ -1,3 +1,15 @@
+# Generated files
+db/
+incremental_db/
+output_files/
+rtl_work/
+simulation/
+
+# Backup files
+*.*.bak
+*.qws
+*.wlf
+
 # Prerequisites
 *.d
 
