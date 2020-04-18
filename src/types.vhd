@@ -21,7 +21,8 @@ type cpu_registers is record
   r1: byte;
   r2: byte;
   r3: byte;
-  r4: byte
+  r4: byte;
+  ip: address
 end record cpu_registers;
 
 
@@ -67,16 +68,21 @@ end record cpu_state_out;
 
 -- input interface
 type cpu_input is record
-  sta: cpu_state_in;
-  mem: cpu_memory_in
+  state: cpu_state_in;
+  mem:   cpu_memory_in
 end record cpu_input;
 
 -- output interface
 type cpu_output is record
-  sta: cpu_state_out;
-  mem: cpu_memory_out;
-  reg: cpu_registers
+  state: cpu_state_out;
+  mem:   cpu_memory_out;
+  reg:   cpu_registers
 end record cpu_output;  
+
+type cpu_internal is record
+  state: cpu_state;
+  reg:   cpu_registers
+end record cpu_internal;
 
 end package types;
 
