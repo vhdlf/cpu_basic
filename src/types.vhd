@@ -16,7 +16,7 @@ subtype qword is std_logic_vector ((64-1) downto 0);
 type cpu_registers is array (0 to (16-1)) of word;
 
 
--- -- cpu can be in these states
+-- cpu can be in these states
 -- type cpu_state is (
 --   halted,
 --   paused,
