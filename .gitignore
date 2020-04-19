@@ -9,6 +9,7 @@ simulation/
 *.*.bak
 *.qws
 *.wlf
+*.rpt
 
 # Prerequisites
 *.d
