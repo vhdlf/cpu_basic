@@ -9,24 +9,22 @@ use work.pkg_cpu.all;
 
 entity top is
 port (
-  clk:    in  std_logic;
-  rst:    in  std_logic;
-  run:    in  std_logic;
-  mout:   in  mem_output;
-  minp:   out mem_input;
-  output: out cpu_output
+  clk:  in  std_logic;
+  rst:  in  std_logic;
+  run:  in  std_logic;
+  mout: in  mem_output;
+  minp: out mem_input;
+  cout: out cpu_output
 );
 end entity top;
 
 
 
 architecture bh of top is
-  signal xs: cpu_status;
   signal xi: cpu_internal;
 begin
 
 p_seq: process (clk, rst)
-  variable s: cpu_status;
   variable i: cpu_internal;
   variable m: mem_output;
   variable vw:  word;
@@ -37,14 +35,13 @@ begin
 
   -- reset? clean up
   if rst = '1' then
-    s := xs;
     i := xi;
     
     -- clean up
-    s.state := st_halted;
-    s.regs  := (others => (others => '0'));
-    s.flags := (others => '0');
-    s.ip    := (others => '0');
+    i.state := st_halted;
+    i.regs  := (others => (others => '0'));
+    i.flags := (others => '0');
+    i.ip    := (others => '0');
     i.op    := (others => '0');
     i.rd    := (others => '0');
     i.rs    := (others => '0');
@@ -55,31 +52,29 @@ begin
     i.wr    := '0';
     
     -- drive signals
-    xs <= s;
     xi <= i;
     
     -- drive output
     minp.addr <= i.addr;
     minp.data <= i.data;
     minp.wr   <= i.wr;
-    output.state <= to_unsigned(cpu_state'pos(s.state), 4);
-    output.ip    <= s.ip(15 downto 0);
+    cout.state <= to_unsigned(cpu_state'pos(i.state), 4);
+    cout.ip    <= i.ip(15 downto 0);
   
   -- run? do something
   elsif rising_edge(clk) and run = '1' then
-    s := xs;
     i := xi;
     m := mout;
     
-    case s.state is
+    case i.state is
       -- was halted? start fetch
       when st_halted =>
-        s.state := st_fetch0;
+        i.state := st_fetch0;
       
       -- request bytes 0-1
       when st_fetch0 =>
-        i.addr  := s.ip(15 downto 0);
-        s.state := st_fetch1;
+        i.addr  := i.ip(15 downto 0);
+        i.state := st_fetch1;
       
       -- got bytes 0-1
       -- if short opcode, execute
@@ -100,11 +95,11 @@ begin
                op_jbe |
                op_jg |
                op_jge =>
-            s.ip    := s.ip + 6;
-            s.state := st_fetch2;
+            i.ip    := i.ip + 6;
+            i.state := st_fetch2;
           when others =>
-            s.ip    := s.ip + 2;
-            s.state := st_execute;
+            i.ip    := i.ip + 2;
+            i.state := st_execute;
         end case;
       
       -- got bytes 2-3
@@ -112,60 +107,60 @@ begin
       when st_fetch2 =>
         i.imm(15 downto 0) := m.data;
         i.addr  := i.addr + 2;
-        s.state := st_fetch3;
+        i.state := st_fetch3;
       
       -- got bytes 4-5
       -- start execution
       when st_fetch3 =>
         i.imm(31 downto 16) := m.data;    
         i.addr  := i.addr + 2;
-        s.state := st_execute;
+        i.state := st_execute;
       
       -- got bytes 0-1
       -- request bytes 2-3
       when st_load0 =>
         i.buff(15 downto 0) := m.data;
         i.addr  := i.addr + 2;
-        s.state := st_load1;
+        i.state := st_load1;
       
       -- got bytes 2-3
       -- set dest register
       -- fetch next instruction
       when st_load1 =>
         i.buff(31 downto 16) := m.data;
-        s.regs(to_integer(i.rd)) := i.buff;
+        i.regs(to_integer(i.rd)) := i.buff;
         i.addr  := i.addr + 2;
-        s.state := st_fetch0;
+        i.state := st_fetch0;
       
       -- wrote bytes 0-1
       -- send bytes 2-3
       when st_store0 =>
         i.data  := i.buff(31 downto 16);
         i.addr  := i.addr + 2;
-        s.state := st_store1;
+        i.state := st_store1;
       
       -- wrote bytes 2-3
       -- stop writing
       -- fetch next instruction
       when st_store1 =>
         i.wr    := '0';
-        s.state := st_fetch0;
+        i.state := st_fetch0;
       
       -- execute instruction
       when st_execute =>
-        vd  := s.regs(to_integer(i.rd));
-        vs  := s.regs(to_integer(i.rs));
+        vd  := i.regs(to_integer(i.rd));
+        vs  := i.regs(to_integer(i.rs));
         imm := i.imm;
-        zf := s.flags(cpu_flags'pos(fl_zero));
-        sf := s.flags(cpu_flags'pos(fl_sign));
-        cf := s.flags(cpu_flags'pos(fl_carry));
+        zf := i.flags(cpu_flags'pos(fl_zero));
+        sf := i.flags(cpu_flags'pos(fl_sign));
+        cf := i.flags(cpu_flags'pos(fl_carry));
         
         case cpu_opcode'val(to_integer(i.op)) is
           -- load rd, [rs+imm]
           when op_load =>
             vw := vs + imm;
             i.addr  := vw(15 downto 0);
-            s.state := st_load0;
+            i.state := st_load0;
           
           -- store [rd+imm], rs
           when op_store =>
@@ -192,42 +187,42 @@ begin
           
           -- jmp imm
           when op_jmp =>
-            s.ip := imm;
+            i.ip := imm;
           
           -- jz imm
           when op_jz =>
             if zf = '1' then
-              s.ip := imm;
+              i.ip := imm;
             end if;
           
           -- jnz imm
           when op_jnz =>
             if zf = '0' then
-              s.ip := imm;
+              i.ip := imm;
             end if;
           
           -- jb imm
           when op_jb =>
             if sf = '1' and zf = '0' then
-              s.ip := imm;
+              i.ip := imm;
             end if;
           
           -- jbe imm
           when op_jbe =>
             if sf = '1' or zf = '1' then
-              s.ip := imm;
+              i.ip := imm;
             end if;
           
           -- jg imm
           when op_jg =>
             if sf = '0' and zf = '0' then
-              s.ip := imm;
+              i.ip := imm;
             end if;
           
           -- jge imm
           when op_jge =>
             if sf = '0' or zf = '1' then
-              s.ip := imm;
+              i.ip := imm;
             end if;
           
           -- add rd, rs
@@ -300,28 +295,27 @@ begin
           
           -- invalid
           when others =>
-            s.state := st_halted;
+            i.state := st_halted;
         end case;
-        s.flags(cpu_flags'pos(fl_carry)) := cf;
-        s.flags(cpu_flags'pos(fl_sign))  := sf;
-        s.flags(cpu_flags'pos(fl_zero))  := zf;
-        s.regs(to_integer(i.rd)) := vd;
+        i.flags(cpu_flags'pos(fl_carry)) := cf;
+        i.flags(cpu_flags'pos(fl_sign))  := sf;
+        i.flags(cpu_flags'pos(fl_zero))  := zf;
+        i.regs(to_integer(i.rd)) := vd;
         
       -- invalid state
       when others =>
-        s.state := st_halted;
+        i.state := st_halted;
     end case;
     
     -- drive status
     xi <= i;
-    xs <= s;
 
     -- drive outputs
     minp.addr <= i.addr;
     minp.data <= i.data;
     minp.wr   <= i.wr;
-    output.state <= to_unsigned(cpu_state'pos(s.state), 4);
-    output.ip    <= s.ip(15 downto 0);
+    cout.state <= to_unsigned(cpu_state'pos(i.state), 4);
+    cout.ip    <= i.ip(15 downto 0);
   end if;
 end process;
 

@@ -10,16 +10,25 @@ package pkg_cpu is
 type cpu_registers is array (15 downto 0) of word;
 
 
--- instruction
-type cpu_instruction is record
-  op:   bits8;
-  rd:   bits4;
-  rs:   bits4;
-  imm:  word;
-end record cpu_instruction;
+-- states
+type cpu_state is (
+  st_halted,
+  st_fetch0,
+  st_fetch1,
+  st_fetch2,
+  st_fetch3,
+  st_load0,
+  st_load1,
+  st_execute,
+  st_store0,
+  st_store1
+);
 
 
 -- opcodes
+--constant OP_HALT: bits8 := x"00";
+--constant OP_LOAD: bits8 := x"01";
+
 type cpu_opcode is (
   op_load,
   op_store,
@@ -55,21 +64,6 @@ type cpu_opcode is (
 );
 
 
--- states
-type cpu_state is (
-  st_halted,
-  st_fetch0,
-  st_fetch1,
-  st_fetch2,
-  st_fetch3,
-  st_load0,
-  st_load1,
-  st_execute,
-  st_store0,
-  st_store1
-);
-
-
 -- flags
 type cpu_flags is (
   fl_carry,
@@ -86,17 +80,13 @@ type cpu_output is record
 end record cpu_output;
 
 
--- status
-type cpu_status is record
+-- internal
+type cpu_internal is record
+  -- status
   state: cpu_state;
   regs:  cpu_registers;
   flags: bits4;
   ip:    word;
-end record cpu_status;
-
-
--- internal
-type cpu_internal is record
   -- instruction
   op:   bits8;
   rd:   bits4;
