@@ -1,10 +1,10 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.txt_util.all;
 use work.pkg_bits.all;
 use work.pkg_mem.all;
 use work.pkg_cpu.all;
-use work.pkg_report.all;
 
 
 
@@ -36,6 +36,7 @@ begin
 
   -- reset? clean up
   if rst = '1' then
+    report "RESET" severity warning;
     i := xi;
     
     -- clean up
@@ -133,7 +134,6 @@ begin
       when st_load1 =>
         i.buff(31 downto 16) := m.data;
         i.regs(to_integer(i.rd)) := i.buff;
-        report "" severity note;
         i.addr  := i.addr + 2;
         i.state := st_fetch0;
       
@@ -179,14 +179,17 @@ begin
           
           -- movi rd, imm
           when OP_MOVI =>
+            report "movi r" & str(i.rd) & ", " & hstr(imm) severity note;
             vd := imm;
           
           -- mov rd, rs
           when OP_MOV =>
+            report "mov r" & str(i.rd) & ", r" & str(i.rs) severity note;
             vd := vs;
           
           -- cmp rd, rs
           when OP_CMP =>
+            report "cmp r" & str(i.rd) & ", r" & str(i.rs) severity note;
             vw := vd - vs;
             if vw = 0 then zf := '1'; else zf := '0'; end if;
             if vw < 0 then sf := '1'; else sf := '0'; end if;
@@ -194,46 +197,54 @@ begin
           
           -- jmp imm
           when OP_JMP =>
+            report "jmp " & hstr(imm) severity note;
             i.ip := imm;
           
           -- jz imm
           when OP_JZ =>
+            report "jz " & hstr(imm) severity note;
             if zf = '1' then
               i.ip := imm;
             end if;
           
           -- jnz imm
           when OP_JNZ =>
+            report "jnz " & hstr(imm) severity note;
             if zf = '0' then
               i.ip := imm;
             end if;
           
           -- jb imm
           when OP_JB =>
+            report "jb " & hstr(imm) severity note;
             if sf = '1' and zf = '0' then
               i.ip := imm;
             end if;
           
           -- jbe imm
           when OP_JBE =>
+            report "jbe " & hstr(imm) severity note;
             if sf = '1' or zf = '1' then
               i.ip := imm;
             end if;
           
           -- jg imm
           when OP_JG =>
+            report "jg " & hstr(imm) severity note;
             if sf = '0' and zf = '0' then
               i.ip := imm;
             end if;
           
           -- jge imm
           when OP_JGE =>
+            report "jge " & hstr(imm) severity note;
             if sf = '0' or zf = '1' then
               i.ip := imm;
             end if;
           
           -- add rd, rs
           when OP_ADD =>
+            report "add r" & str(i.rd) & ", r" & str(i.rs) severity note;
             vd := vd + vs;
           
           -- adc rd, rs
@@ -243,6 +254,7 @@ begin
           
           -- sub rd, rs
           when OP_SUB =>
+            report "sub r" & str(i.rd) & ", r" & str(i.rs) severity note;
             vd := vd - vs;
           
           -- sbb rd, rs
@@ -252,6 +264,7 @@ begin
           
           -- mul rd, rs
           when OP_MUL =>
+            report "mul r" & str(i.rd) & ", r" & str(i.rs) severity note;
             vdw := vd * vs;
             vd := vdw(31 downto 0);
           
@@ -262,26 +275,41 @@ begin
           
           -- div rd, rs
           when OP_DIV =>
+            report "div r" & str(i.rd) & ", r" & str(i.rs) severity note;
             vd := vd / vs;
           
           -- idiv rd, rs
           --when OP_IDIV =>
           --  vd := vd / vs;
-          
+
+          -- inc rd
+          when OP_INC =>
+            report "inc r" & str(i.rd) severity note;
+            vd := vd + 1;
+
+          -- dec rd
+          when OP_DEC =>
+            report "dec r" & str(i.rd) severity note;
+            vd := vd - 1;
+
           -- and rd, rs
           when OP_AND =>
+            report "and r" & str(i.rd) & ", r" & str(i.rs) severity note;
             vd := vd and vs;
           
           -- or rd, rs
           when OP_OR =>
+            report "or r" & str(i.rd) & ", r" & str(i.rs) severity note;
             vd := vd or vs;
           
           -- not rd
           when OP_NOT =>
+            report "not r" & str(i.rd) severity note;
             vd := not vd;
           
           -- xor rd, rs
           when OP_XOR =>
+            report "xor r" & str(i.rd) & ", r" & str(i.rs) severity note;
             vd := vd xor vs;
           
           -- shl rd, rs
@@ -302,6 +330,7 @@ begin
           
           -- invalid
           when others =>
+            report "INVALID OPCODE" severity warning;
             i.state := st_halted;
         end case;
         i.flags(FL_CARRY) := cf;
@@ -311,6 +340,7 @@ begin
         
       -- invalid state
       when others =>
+        report "INVALID STATE" severity warning;
         i.state := st_halted;
     end case;
     

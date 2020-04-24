@@ -52,6 +52,8 @@ constant OP_MUL:   bits8 := x"34";
 constant OP_IMUL:  bits8 := x"35";
 constant OP_DIV:   bits8 := x"36";
 constant OP_IDIV:  bits8 := x"37";
+constant OP_INC:   bits8 := x"38";
+constant OP_DEC:   bits8 := x"39";
 
 constant OP_AND:   bits8 := x"40";
 constant OP_OR:    bits8 := x"41";

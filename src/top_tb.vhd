@@ -1,11 +1,10 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.pkg_report.all;
+use work.txt_util.all;
 use work.pkg_bits.all;
 use work.pkg_mem.all;
 use work.pkg_cpu.all;
-
 
 
 entity top_tb is
@@ -46,30 +45,23 @@ end process;
 p_mem: process (clk)
   variable i: mem_input;
   variable o: mem_output;
-  variable a: integer range 0 to bits16'high;
+  variable a: integer range 0 to 65535;
 begin
   i := minp;
   o := mout;
   a := to_integer(i.addr);
   
-  if rising_edge(clk) then
+  if falling_edge(clk) then
     -- output
     o.data(7  downto 0) := mem(a);
     o.data(15 downto 8) := mem(a + 1);
-    report_log(ID_MEM, note, "read @" &
-      integer'image(a) & " = " &
-      integer'image(to_integer(o.data))
-    );
     if mwr = '1' then
       mem <= mcopy;
     end if;
     if i.wr = '1' then
+      report "write @" & str(a) & ": " & hstr(i.data) severity note;
       mem(a)     <= i.data(7  downto 0);
       mem(a + 1) <= i.data(15 downto 8);
-      report_log(ID_MEM, warning, "write @" &
-        integer'image(a) & " = " &
-        integer'image(to_integer(i.data))
-      );
     end if;
     mout <= o;
   end if;
@@ -79,9 +71,6 @@ end process;
 -- run test
 p_init: process
 begin
-  -- start report
-  report_init("report.log");
-  
   -- init memory
   mcopy <= (others => x"00");
   mwr <= '1';
@@ -93,14 +82,25 @@ begin
   wait for tclk;
   rst <= '0';
 
-  -- test movi & store
+  -- test factorial program
   mcopy <= (
-    -- movi r0, 00010203
+    -- movi r0, 00000005
     0 => OP_MOVI, 1 => x"00",
-    2 => x"00", 3 => x"00", 4 => x"00", 5 => x"00",
-    -- store [r1+00000000], r0
-    6 => OP_STORE, 7 => x"00",
-    8 => x"00", 9 => x"00", 10 => x"00", 11 => x"00",
+    2 => x"05", 3 => x"00", 4 => x"00", 5 => x"00",
+    -- inc r1
+    6 => OP_INC, 7 => x"01",
+    -- mul r1, r0
+    8 => OP_MUL, 9 => x"01",
+    -- dec r0
+    10 => OP_DEC, 11 => x"00",
+    -- cmp r0, r2
+    12 => OP_CMP, 13 => x"20",
+    -- jnz 00000008
+    14 => OP_JNZ, 15 => x"00",
+    16 => x"08", 17 => x"00", 18 => x"00", 19 => x"00",
+    -- store [r2+00000000], r1
+    20 => OP_STORE, 21 => x"12",
+    22 => x"00", 23 => x"00", 24 => x"00", 25 => x"00",
     -- halt
     others => OP_HALT
   );
@@ -111,8 +111,6 @@ begin
   wait for tclk;
   run <= '0';
   wait for 20 * tclk;
-  
-  report_log(ID_SIM, note, "CPU_BASIC tests passed.");
   wait;
 end process;
 end architecture bh;
