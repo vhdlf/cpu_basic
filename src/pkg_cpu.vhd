@@ -7,7 +7,7 @@ use work.pkg_bits.all;
 package pkg_cpu is
 
 -- registers
-type cpu_registers is array (15 downto 0) of bits64;
+type cpu_registers is array (15 downto 0) of word;
 
 
 -- instruction
@@ -15,7 +15,7 @@ type cpu_instruction is record
   op:   bits8;
   rd:   bits4;
   rs:   bits4;
-  imm:  bits64;
+  imm:  word;
 end record cpu_instruction;
 
 
@@ -62,26 +62,36 @@ type cpu_state is (
   st_fetch1,
   st_fetch2,
   st_fetch3,
-  st_fetch4,
-  st_fetch5,
   st_load0,
   st_load1,
-  st_load2,
-  st_load3,
   st_execute,
   st_store0,
-  st_store1,
-  st_store2,
-  st_store3
+  st_store1
 );
+
+
+-- flags
+type cpu_flags is (
+  fl_carry,
+  fl_zero,
+  fl_sign,
+  fl_overflow
+);
+
+
+-- output
+type cpu_output is record
+  state: bits4;
+  ip:    bits16;
+end record cpu_output;
 
 
 -- status
 type cpu_status is record
   state: cpu_state;
   regs:  cpu_registers;
-  flags: bits64;
-  ip:    bits64;
+  flags: bits4;
+  ip:    word;
 end record cpu_status;
 
 
@@ -91,11 +101,11 @@ type cpu_internal is record
   op:   bits8;
   rd:   bits4;
   rs:   bits4;
-  imm:  bits64;
+  imm:  word;
   -- memory
   addr: bits16;
   data: bits16;
-  buff: bits64;
+  buff: word;
   wr:   std_logic;
 end record cpu_internal;
 
