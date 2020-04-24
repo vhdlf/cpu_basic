@@ -8,8 +8,6 @@ use work.pkg_cpu.all;
 
 
 
--- internal test bench
--- no pins necessary
 entity top_tb is
 end entity top_tb;
 
@@ -21,13 +19,13 @@ architecture bh of top_tb is
   signal run:  std_logic;
   signal mout: mem_output;
   signal minp: mem_input;
-  signal output: cpu_output;
+  signal cout: cpu_output;
+  signal mem:  mem_block;
 begin
--- this device
--- is under test
-DUT: entity work.top port map (clk, rst, run, mout, minp, output);
+DUT: entity work.top port map (clk, rst, run, mout, minp, cout);
 
 
+-- run clock
 p_clk: process
 begin
   clk <= '0';
@@ -38,19 +36,38 @@ begin
 end process;
 
 
+-- 16-bit memory
+p_mem: process (clk)
+  variable i: mem_input;
+  variable o: mem_output;
+  variable a: integer range 0 to bits16'high;
+begin
+  i := minp;
+  o := mout;
+  a := to_integer(i.addr);
+  
+  if rising_edge(clk) then
+    -- output 
+    o.data(7  downto 0) := mem(a);
+    o.data(15 downto 8) := mem(a + 1);
+    if i.wr = '1' then
+      mem(a)     <= i.data(7  downto 0);
+      mem(a + 1) <= i.data(15 downto 8);
+    end if;
+    mout <= o;
+  end if;
+end process;
+
+
+-- run test
 p_init: process
 begin
-  -- need report.log?
   report_init("report.log");
 
-  -- test reset
   rst <= '1';
   wait for 10 ns;
-  -- report_assert(ID_SIM, error, "case 0 failed!", output.state = st_halted);
   
   report_log(ID_SIM, note, "CPU_BASIC tests passed.");
   wait;
-  -- test done
-  -- so just wait
 end process;
 end architecture bh;
