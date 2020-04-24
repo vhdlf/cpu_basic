@@ -74,8 +74,13 @@ constant FL_OVERFLOW: integer := 3;
 
 -- output
 type cpu_output is record
+  -- status
   state: bits4;
-  ip:    bits16;
+  ip:    bits8;
+  -- instruction
+  op:    bits8;
+  rd:    bits4;
+  rs:    bits4;
 end record cpu_output;
 
 

@@ -4,6 +4,7 @@ use ieee.numeric_std.all;
 use work.pkg_bits.all;
 use work.pkg_mem.all;
 use work.pkg_cpu.all;
+use work.pkg_report.all;
 
 
 
@@ -59,7 +60,10 @@ begin
     minp.data <= i.data;
     minp.wr   <= i.wr;
     cout.state <= to_unsigned(cpu_state'pos(i.state), 4);
-    cout.ip    <= i.ip(15 downto 0);
+    cout.ip    <= i.ip(7 downto 0);
+    cout.op <= i.op;
+    cout.rd <= i.rd;
+    cout.rs <= i.rs;
   
   -- run? do something
   elsif rising_edge(clk) then
@@ -129,6 +133,7 @@ begin
       when st_load1 =>
         i.buff(31 downto 16) := m.data;
         i.regs(to_integer(i.rd)) := i.buff;
+        report "" severity note;
         i.addr  := i.addr + 2;
         i.state := st_fetch0;
       
@@ -317,7 +322,10 @@ begin
     minp.data <= i.data;
     minp.wr   <= i.wr;
     cout.state <= to_unsigned(cpu_state'pos(i.state), 4);
-    cout.ip    <= i.ip(15 downto 0);
+    cout.ip    <= i.ip(7 downto 0);
+    cout.op <= i.op;
+    cout.rd <= i.rd;
+    cout.rs <= i.rs;
   end if;
 end process;
 
