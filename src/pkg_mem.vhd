@@ -21,7 +21,7 @@ end record mem_output;
 
 
 -- memory block
-subtype mem_address is integer range 0 to 15;
+subtype mem_address is integer range 0 to 31;
 type mem_block is array (mem_address) of bits8;
 
 end package pkg_mem;

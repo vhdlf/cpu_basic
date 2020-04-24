@@ -65,6 +65,7 @@ procedure report_log (
 ) is
   variable l: line;
 begin
+  report id & " " & severity_t'image(sev) & ": " & msg severity note;
   if severity_t'pos(sev) >= severity_t'pos(report_threshold) then
     write(l, time'image(now) & " " & id & " " & severity_t'image(sev) & ": " & msg);
     writeline(report_file, l);

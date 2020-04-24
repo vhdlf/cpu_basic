@@ -10,6 +10,7 @@ package pkg_cpu is
 type cpu_registers is array (15 downto 0) of word;
 
 
+
 -- states
 type cpu_state is (
   st_halted,
@@ -25,52 +26,50 @@ type cpu_state is (
 );
 
 
+
 -- opcodes
---constant OP_HALT: bits8 := x"00";
---constant OP_LOAD: bits8 := x"01";
+constant OP_HALT:  bits8 := x"00";
 
-type cpu_opcode is (
-  op_load,
-  op_store,
-  op_movi,
-  op_mov,
+constant OP_LOAD:  bits8 := x"10";
+constant OP_STORE: bits8 := x"11";
+constant OP_MOVI:  bits8 := x"12";
+constant OP_MOV:   bits8 := x"13";
 
-  op_cmp,
-  op_jmp,
-  op_jz,
-  op_jnz,
-  op_jb,
-  op_jbe,
-  op_jg,
-  op_jge,
+constant OP_CMP:   bits8 := x"20";
+constant OP_JMP:   bits8 := x"21";
+constant OP_JZ:    bits8 := x"22";
+constant OP_JNZ:   bits8 := x"23";
+constant OP_JB:    bits8 := x"24";
+constant OP_JBE:   bits8 := x"25";
+constant OP_JG:    bits8 := x"26";
+constant OP_JGE:   bits8 := x"27";
 
-  op_add,
-  op_adc,
-  op_sub,
-  op_sbb,
-  op_mul,
-  op_imul,
-  op_div,
-  op_idiv,
+constant OP_ADD:   bits8 := x"30";
+constant OP_ADC:   bits8 := x"31";
+constant OP_SUB:   bits8 := x"32";
+constant OP_SBB:   bits8 := x"33";
+constant OP_MUL:   bits8 := x"34";
+constant OP_IMUL:  bits8 := x"35";
+constant OP_DIV:   bits8 := x"36";
+constant OP_IDIV:  bits8 := x"37";
 
-  op_and,
-  op_or,
-  op_not,
-  op_xor,
-  op_shl,
-  op_shr,
-  op_rol,
-  op_ror
-);
+constant OP_AND:   bits8 := x"40";
+constant OP_OR:    bits8 := x"41";
+constant OP_NOT:   bits8 := x"42";
+constant OP_XOR:   bits8 := x"43";
+constant OP_SHL:   bits8 := x"44";
+constant OP_SHR:   bits8 := x"45";
+constant OP_ROL:   bits8 := x"46";
+constant OP_ROR:   bits8 := x"47";
+
 
 
 -- flags
-type cpu_flags is (
-  fl_carry,
-  fl_zero,
-  fl_sign,
-  fl_overflow
-);
+constant FL_CARRY:    integer := 0;
+constant FL_ZERO:     integer := 1;
+constant FL_SIGN:     integer := 2;
+constant FL_OVERFLOW: integer := 3;
+
 
 
 -- output
@@ -78,6 +77,7 @@ type cpu_output is record
   state: bits4;
   ip:    bits16;
 end record cpu_output;
+
 
 
 -- internal

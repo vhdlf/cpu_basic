@@ -24,7 +24,7 @@ architecture bh of top is
   signal xi: cpu_internal;
 begin
 
-p_seq: process (clk, rst)
+p_seq: process (clk, rst, run, xi)
   variable i: cpu_internal;
   variable m: mem_output;
   variable vw:  word;
@@ -62,14 +62,14 @@ begin
     cout.ip    <= i.ip(15 downto 0);
   
   -- run? do something
-  elsif rising_edge(clk) and run = '1' then
+  elsif rising_edge(clk) then
     i := xi;
     m := mout;
     
     case i.state is
       -- was halted? start fetch
       when st_halted =>
-        i.state := st_fetch0;
+        if run = '1' then i.state := st_fetch0; end if;
       
       -- request bytes 0-1
       when st_fetch0 =>
@@ -84,17 +84,17 @@ begin
         i.rd := m.data(11 downto 8);
         i.rs := m.data(15 downto 12);
         i.addr := i.addr + 2;
-        case cpu_opcode'val(to_integer(i.op)) is
-          when op_load |
-               op_store |
-               op_movi |
-               op_jmp |
-               op_jz |
-               op_jnz |
-               op_jb |
-               op_jbe |
-               op_jg |
-               op_jge =>
+        case i.op is
+          when OP_LOAD |
+               OP_STORE |
+               OP_MOVI |
+               OP_JMP |
+               OP_JZ |
+               OP_JNZ |
+               OP_JB |
+               OP_JBE |
+               OP_JG |
+               OP_JGE =>
             i.ip    := i.ip + 6;
             i.state := st_fetch2;
           when others =>
@@ -151,155 +151,157 @@ begin
         vd  := i.regs(to_integer(i.rd));
         vs  := i.regs(to_integer(i.rs));
         imm := i.imm;
-        zf := i.flags(cpu_flags'pos(fl_zero));
-        sf := i.flags(cpu_flags'pos(fl_sign));
-        cf := i.flags(cpu_flags'pos(fl_carry));
+        zf := i.flags(FL_ZERO);
+        sf := i.flags(FL_SIGN);
+        cf := i.flags(FL_CARRY);
+        i.state := st_fetch0;
         
-        case cpu_opcode'val(to_integer(i.op)) is
+        case i.op is
           -- load rd, [rs+imm]
-          when op_load =>
+          when OP_LOAD =>
             vw := vs + imm;
             i.addr  := vw(15 downto 0);
             i.state := st_load0;
           
           -- store [rd+imm], rs
-          when op_store =>
+          when OP_STORE =>
             vw := vd + imm;
-            i.addr := vw(15 downto 0);
-            i.buff := vs;
-            i.data := i.buff(15 downto 0);
-            i.wr   := '1';
+            i.addr  := vw(15 downto 0);
+            i.buff  := vs;
+            i.data  := i.buff(15 downto 0);
+            i.wr    := '1';
+            i.state := st_store0;
           
           -- movi rd, imm
-          when op_movi =>
+          when OP_MOVI =>
             vd := imm;
           
           -- mov rd, rs
-          when op_mov =>
+          when OP_MOV =>
             vd := vs;
           
           -- cmp rd, rs
-          when op_cmp =>
+          when OP_CMP =>
             vw := vd - vs;
             if vw = 0 then zf := '1'; else zf := '0'; end if;
             if vw < 0 then sf := '1'; else sf := '0'; end if;
             cf := '0'; -- v65(64);
           
           -- jmp imm
-          when op_jmp =>
+          when OP_JMP =>
             i.ip := imm;
           
           -- jz imm
-          when op_jz =>
+          when OP_JZ =>
             if zf = '1' then
               i.ip := imm;
             end if;
           
           -- jnz imm
-          when op_jnz =>
+          when OP_JNZ =>
             if zf = '0' then
               i.ip := imm;
             end if;
           
           -- jb imm
-          when op_jb =>
+          when OP_JB =>
             if sf = '1' and zf = '0' then
               i.ip := imm;
             end if;
           
           -- jbe imm
-          when op_jbe =>
+          when OP_JBE =>
             if sf = '1' or zf = '1' then
               i.ip := imm;
             end if;
           
           -- jg imm
-          when op_jg =>
+          when OP_JG =>
             if sf = '0' and zf = '0' then
               i.ip := imm;
             end if;
           
           -- jge imm
-          when op_jge =>
+          when OP_JGE =>
             if sf = '0' or zf = '1' then
               i.ip := imm;
             end if;
           
           -- add rd, rs
-          when op_add =>
+          when OP_ADD =>
             vd := vd + vs;
           
           -- adc rd, rs
-          --when op_adc =>
+          --when OP_ADC =>
           --  if cf = '1' then vs := vs + 1; end if;
           --  vd := vd + vs;
           
           -- sub rd, rs
-          when op_sub =>
+          when OP_SUB =>
             vd := vd - vs;
           
           -- sbb rd, rs
-          --when op_sbb =>
+          --when OP_SBB =>
           --  if cf = '1' then vs := vs - 1; end if;
           --  vd := vd - vs;
           
           -- mul rd, rs
-          when op_mul =>
+          when OP_MUL =>
             vdw := vd * vs;
             vd := vdw(31 downto 0);
           
           -- imul rd, rs
-          --when op_imul =>
+          --when OP_IMUL =>
           --  v128 := vd * vs;
           --  vd := v128(63 downto 0);
           
           -- div rd, rs
-          when op_div =>
+          when OP_DIV =>
             vd := vd / vs;
           
           -- idiv rd, rs
-          --when op_idiv =>
+          --when OP_IDIV =>
           --  vd := vd / vs;
           
           -- and rd, rs
-          when op_and =>
+          when OP_AND =>
             vd := vd and vs;
           
           -- or rd, rs
-          when op_or =>
+          when OP_OR =>
             vd := vd or vs;
           
           -- not rd
-          when op_not =>
+          when OP_NOT =>
             vd := not vd;
           
           -- xor rd, rs
-          when op_xor =>
+          when OP_XOR =>
             vd := vd xor vs;
           
           -- shl rd, rs
-          --when op_shl =>
+          --when OP_SHL =>
           --  vd := shift_left(vd, to_integer(vs));
           
           -- shr rd, rs
-          --when op_shr =>
+          --when OP_SHR =>
           --  vd := shift_right(vd, to_integer(vs));
           
           -- rol rd, rs
-          --when op_rol =>
+          --when OP_ROL =>
           --  vd := shift_left(vd, to_integer(vs));
           
           -- ror rd, rs
-          --when op_ror =>
+          --when OP_ROR =>
           --  vd := shift_right(vd, to_integer(vs));
           
           -- invalid
           when others =>
             i.state := st_halted;
         end case;
-        i.flags(cpu_flags'pos(fl_carry)) := cf;
-        i.flags(cpu_flags'pos(fl_sign))  := sf;
-        i.flags(cpu_flags'pos(fl_zero))  := zf;
+        i.flags(FL_CARRY) := cf;
+        i.flags(FL_SIGN)  := sf;
+        i.flags(FL_ZERO)  := zf;
         i.regs(to_integer(i.rd)) := vd;
         
       -- invalid state
