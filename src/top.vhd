@@ -164,13 +164,13 @@ begin
         case i.op is
           -- load rd, [rs+imm]
           when OP_LOAD =>
-            vw := vs + imm;
+            vw := '0' & vs + imm;
             i.addr  := vw(15 downto 0);
             i.state := st_load0;
           
           -- store [rd+imm], rs
           when OP_STORE =>
-            vw := vd + imm;
+            vw := '0' & vd + imm;
             i.addr  := vw(15 downto 0);
             i.buff  := vs;
             i.data  := i.buff(15 downto 0);

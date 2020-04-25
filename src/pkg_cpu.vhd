@@ -121,6 +121,7 @@ begin
   f(FL_CARRY) := v(32);
   f(FL_SIGN)  := v(31);
   if v(31 downto 0) = 0 then f(FL_ZERO) := '1'; end if;
+  return f;
 end function flags_word;
 
 
@@ -130,6 +131,7 @@ begin
   f(FL_CARRY) := v(64);
   f(FL_SIGN)  := v(63);
   if v(63 downto 0) = 0 then f(FL_ZERO) := '1'; end if;
+  return f;
 end function flags_dword;
 
 end package body pkg_cpu;

@@ -71,16 +71,14 @@ end process;
 -- run test
 p_init: process
 begin
-  -- init memory
+  -- initialize
+  rst <= '1';
+  run <= '0';
   mcopy <= (others => x"00");
   mwr <= '1';
   wait for tclk;
-  mwr <= '0';
-  
-  -- reset cpu
-  rst <= '1';
-  wait for tclk;
   rst <= '0';
+  mwr <= '0';
 
   -- test factorial program
   mcopy <= (
