@@ -106,4 +106,30 @@ type cpu_internal is record
   wr:   std_logic;
 end record cpu_internal;
 
+function flags_word(v: word1) return bits4;
+function flags_dword(v: dword1) return bits4;
+
 end package pkg_cpu;
+
+
+
+package body pkg_cpu is
+
+function flags_word(v: word1) return bits4 is
+  variable f: bits4 := (others => '0');
+begin
+  f(FL_CARRY) := v(32);
+  f(FL_SIGN)  := v(31);
+  if v(31 downto 0) = 0 then f(FL_ZERO) := '1'; end if;
+end function flags_word;
+
+
+function flags_dword(v: dword1) return bits4 is
+  variable f: bits4 := (others => '0');
+begin
+  f(FL_CARRY) := v(64);
+  f(FL_SIGN)  := v(63);
+  if v(63 downto 0) = 0 then f(FL_ZERO) := '1'; end if;
+end function flags_dword;
+
+end package body pkg_cpu;

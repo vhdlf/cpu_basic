@@ -28,8 +28,8 @@ begin
 p_seq: process (clk, rst, run, xi)
   variable i: cpu_internal;
   variable m: mem_output;
-  variable vw:  word;
-  variable vdw: dword;
+  variable vw:  word1;
+  variable vdw: dword1;
   variable vd, vs, imm: word;
   variable zf, cf, sf:  std_logic;
 begin
@@ -190,10 +190,8 @@ begin
           -- cmp rd, rs
           when OP_CMP =>
             report "cmp r" & str(i.rd) & ", r" & str(i.rs) severity note;
-            vw := vd - vs;
-            if vw = 0 then zf := '1'; else zf := '0'; end if;
-            if vw < 0 then sf := '1'; else sf := '0'; end if;
-            cf := '0'; -- v65(64);
+            vw := '0' & vd - vs;
+            i.flags := flags_word(vw);
           
           -- jmp imm
           when OP_JMP =>
@@ -245,80 +243,112 @@ begin
           -- add rd, rs
           when OP_ADD =>
             report "add r" & str(i.rd) & ", r" & str(i.rs) severity note;
-            vd := vd + vs;
+            vw := '0' & vd + vs;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
           
           -- adc rd, rs
-          --when OP_ADC =>
-          --  if cf = '1' then vs := vs + 1; end if;
-          --  vd := vd + vs;
+          when OP_ADC =>
+            report "adc r" & str(i.rd) & ", r" & str(i.rs) severity note;
+            vw := '0' & vd + vs;
+            if cf = '1' then vw := vw + 1; end if;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
           
           -- sub rd, rs
           when OP_SUB =>
             report "sub r" & str(i.rd) & ", r" & str(i.rs) severity note;
-            vd := vd - vs;
+            vw := '0' & vd - vs;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
           
           -- sbb rd, rs
-          --when OP_SBB =>
-          --  if cf = '1' then vs := vs - 1; end if;
-          --  vd := vd - vs;
+          when OP_SBB =>
+            report "sbb r" & str(i.rd) & ", r" & str(i.rs) severity note;
+            vd := '0' & vd - vs;
+            if cf = '1' then vw := vw - 1; end if;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
           
           -- mul rd, rs
           when OP_MUL =>
             report "mul r" & str(i.rd) & ", r" & str(i.rs) severity note;
-            vdw := vd * vs;
+            vdw := '0' & vd * vs;
             vd := vdw(31 downto 0);
+            i.flags := flags_dword(vdw);
           
           -- imul rd, rs
-          --when OP_IMUL =>
-          --  v128 := vd * vs;
-          --  vd := v128(63 downto 0);
+          when OP_IMUL =>
+            report "imul r" & str(i.rd) & ", r" & str(i.rs) severity note;
+            vdw := '0' & vd * vs;
+            vd := vdw(31 downto 0);
+            i.flags := flags_dword(vdw);
           
           -- div rd, rs
           when OP_DIV =>
             report "div r" & str(i.rd) & ", r" & str(i.rs) severity note;
-            vd := vd / vs;
+            vw := '0' & vd / vs;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
           
           -- idiv rd, rs
-          --when OP_IDIV =>
-          --  vd := vd / vs;
+          when OP_IDIV =>
+            report "idiv r" & str(i.rd) & ", r" & str(i.rs) severity note;
+            vw := '0' & vd / vs;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
 
           -- inc rd
           when OP_INC =>
             report "inc r" & str(i.rd) severity note;
-            vd := vd + 1;
+            vw := '0' & vd + 1;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
 
           -- dec rd
           when OP_DEC =>
             report "dec r" & str(i.rd) severity note;
-            vd := vd - 1;
+            vw := '0' & vd - 1;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
 
           -- and rd, rs
           when OP_AND =>
             report "and r" & str(i.rd) & ", r" & str(i.rs) severity note;
-            vd := vd and vs;
+            vw := '0' & vd and vs;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
           
           -- or rd, rs
           when OP_OR =>
             report "or r" & str(i.rd) & ", r" & str(i.rs) severity note;
-            vd := vd or vs;
+            vw := '0' & vd or vs;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
           
           -- not rd
           when OP_NOT =>
             report "not r" & str(i.rd) severity note;
-            vd := not vd;
+            vw := not '0' & vd;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
           
           -- xor rd, rs
           when OP_XOR =>
             report "xor r" & str(i.rd) & ", r" & str(i.rs) severity note;
-            vd := vd xor vs;
+            vw := '0' & vd xor vs;
+            vd := vw(31 downto 0);
+            i.flags := flags_word(vw);
           
           -- shl rd, rs
-          --when OP_SHL =>
-          --  vd := shift_left(vd, to_integer(vs));
+          when OP_SHL =>
+            report "shl r" & str(i.rd) & ", r" & str(i.rs) severity note;
+            vd := shift_left(vd, to_integer(vs));
           
           -- shr rd, rs
-          --when OP_SHR =>
-          --  vd := shift_right(vd, to_integer(vs));
+          when OP_SHR =>
+            report "shr r" & str(i.rd) & ", r" & str(i.rs) severity note;
+            vd := shift_right(vd, to_integer(vs));
           
           -- rol rd, rs
           --when OP_ROL =>
@@ -333,9 +363,9 @@ begin
             report "INVALID OPCODE" severity warning;
             i.state := st_halted;
         end case;
-        i.flags(FL_CARRY) := cf;
-        i.flags(FL_SIGN)  := sf;
-        i.flags(FL_ZERO)  := zf;
+        -- i.flags(FL_CARRY) := cf;
+        -- i.flags(FL_SIGN)  := sf;
+        -- i.flags(FL_ZERO)  := zf;
         i.regs(to_integer(i.rd)) := vd;
         
       -- invalid state
