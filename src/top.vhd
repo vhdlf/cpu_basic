@@ -267,7 +267,7 @@ begin
           -- sbb rd, rs
           when OP_SBB =>
             report "sbb r" & str(i.rd) & ", r" & str(i.rs) severity note;
-            vd := '0' & vd - vs;
+            vw := '0' & vd - vs;
             if cf = '1' then vw := vw - 1; end if;
             vd := vw(31 downto 0);
             i.flags := flags_word(vw);

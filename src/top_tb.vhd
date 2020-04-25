@@ -79,10 +79,11 @@ begin
   rst <= '0';
   mwr <= '0';
 
+  -- test square
   if 1 = 1 then
     -- write program
     mcopy <= (
-      -- movi r0, 0000000A
+      -- movi r0, 0000000A (10)
       0 => OP_MOVI, 1 => x"00",
       2 => x"0A", 3 => x"00", 4 => x"00", 5 => x"00",
       -- mul r0, r0
