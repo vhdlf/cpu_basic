@@ -11,7 +11,6 @@ entity top_tb is
 end entity top_tb;
 
 
-
 architecture bh of top_tb is
   constant ID_CPU: string := "cpu";
   constant ID_MEM: string := "mem";
@@ -80,35 +79,139 @@ begin
   rst <= '0';
   mwr <= '0';
 
-  -- test factorial program
-  mcopy <= (
-    -- movi r0, 00000005
-    0 => OP_MOVI, 1 => x"00",
-    2 => x"05", 3 => x"00", 4 => x"00", 5 => x"00",
-    -- inc r1
-    6 => OP_INC, 7 => x"01",
-    -- mul r1, r0
-    8 => OP_MUL, 9 => x"01",
-    -- dec r0
-    10 => OP_DEC, 11 => x"00",
-    -- cmp r0, r2
-    12 => OP_CMP, 13 => x"20",
-    -- jnz 00000008
-    14 => OP_JNZ, 15 => x"00",
-    16 => x"08", 17 => x"00", 18 => x"00", 19 => x"00",
-    -- store [r2+00000000], r1
-    20 => OP_STORE, 21 => x"12",
-    22 => x"00", 23 => x"00", 24 => x"00", 25 => x"00",
-    -- halt
-    others => OP_HALT
-  );
-  mwr <= '1';
-  wait for tclk;
-  mwr <= '0';
-  run <= '1';
-  wait for tclk;
-  run <= '0';
-  wait for 20 * tclk;
+  if 1 = 1 then
+    -- write program
+    mcopy <= (
+      -- movi r0, 0000000A
+      0 => OP_MOVI, 1 => x"00",
+      2 => x"0A", 3 => x"00", 4 => x"00", 5 => x"00",
+      -- mul r0, r0
+      6 => OP_MUL, 7 => x"00",
+      -- store [r1+00000000], r0
+      8 => OP_STORE, 9 => x"01",
+      10 => x"00", 11 => x"00", 12 => x"00", 13 => x"00",
+      -- halt
+      others => OP_HALT
+    );
+    mwr <= '1';
+    rst <= '1';
+    run <= '0';
+    wait for tclk;
+    mwr <= '0';
+    rst <= '0';
+  
+    -- run
+    run <= '1';
+    wait for tclk;
+    run <= '0';
+    wait for 20 * tclk;
+  
+    -- check result
+    assert (to_integer(mem(0)) = 100) report "SQUARE failed" severity failure;
+    report "SQUARE passed" severity note;
+  end if;
+
+  -- test factorial
+  if 1 = 1 then
+      -- write program
+      mcopy <= (
+        -- movi r0, 00000005
+        0 => OP_MOVI, 1 => x"00",
+        2 => x"05", 3 => x"00", 4 => x"00", 5 => x"00",
+        -- inc r1
+        6 => OP_INC, 7 => x"01",
+        -- mul r1, r0
+        8 => OP_MUL, 9 => x"01",
+        -- dec r0
+        10 => OP_DEC, 11 => x"00",
+        -- cmp r0, r2
+        12 => OP_CMP, 13 => x"20",
+        -- jnz 00000008
+        14 => OP_JNZ, 15 => x"00",
+        16 => x"08", 17 => x"00", 18 => x"00", 19 => x"00",
+        -- store [r2+00000000], r1
+        20 => OP_STORE, 21 => x"12",
+        22 => x"00", 23 => x"00", 24 => x"00", 25 => x"00",
+        -- halt
+        others => OP_HALT
+      );
+      mwr <= '1';
+      rst <= '1';
+      run <= '0';
+      wait for tclk;
+      mwr <= '0';
+      rst <= '0';
+    
+      -- run
+      run <= '1';
+      wait for tclk;
+      run <= '0';
+      wait for 100 * tclk;
+    
+      -- check result
+      assert (to_integer(mem(0)) = 120) report "FACTORIAL failed" severity failure;
+      report "FACTORIAL passed" severity note;
+    end if;
+
+
+  -- test prime
+  if 1 = 1 then
+    -- write program
+    mcopy <= (
+      -- movi r0, 0000000D (13)
+      0 => OP_MOVI, 1 => x"00",
+      2 => x"0D", 3 => x"00", 4 => x"00", 5 => x"00",
+      -- inc r1
+      6 => OP_INC, 7 => x"01",
+      -- inc r1
+      8 => OP_INC, 9 => x"01",
+      -- mov r2, r0
+      10 => OP_MOV, 11 => x"02",
+      -- mov r3, r0
+      12 => OP_MOV, 13 => x"03",
+      -- div r3, r1
+      14 => OP_DIV, 15 => x"13",
+      -- mul r3, r1
+      16 => OP_MUL, 17 => x"13",
+      -- mov r4, r0
+      18 => OP_MOV, 19 => x"04",
+      -- sub r4, r3
+      20 => OP_SUB, 21 => x"34",
+      -- jz 0000028 (40)
+      22 => OP_JZ, 23 => x"00",
+      24 => x"28", 25 => x"00", 26 => x"00", 27 => x"00",
+      -- inc r1
+      28 => OP_INC, 29 => x"01",
+      -- cmp r2, r1
+      30 => OP_CMP, 31 => x"12",
+      -- jnz 000000C (12)
+      32 => OP_JNZ, 33 => x"00",
+      34 => x"0C", 35 => x"00", 36 => x"00", 37 => x"00",
+      -- inc r5
+      38 => OP_INC, 39 => x"05",
+      -- store [r6+00000000], r5
+      40 => OP_STORE, 41 => x"56",
+      42 => x"00", 43 => x"00", 44 => x"00", 45 => x"00",
+      -- halt
+      others => OP_HALT
+    );
+    mwr <= '1';
+    rst <= '1';
+    run <= '0';
+    wait for tclk;
+    mwr <= '0';
+    rst <= '0';
+  
+    -- run
+    run <= '1';
+    wait for tclk;
+    run <= '0';
+    wait for 500 * tclk;
+  
+    -- check result
+    assert (to_integer(mem(0)) = 1) report "PRIME failed" severity failure;
+    report "PRIME passed" severity note;
+  end if;
   wait;
 end process;
 end architecture bh;

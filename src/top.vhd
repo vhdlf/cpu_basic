@@ -164,12 +164,14 @@ begin
         case i.op is
           -- load rd, [rs+imm]
           when OP_LOAD =>
+            report "load r" & str(i.rd) & ", [r" & str(i.rs) & " + " & hstr(imm) & "]" severity note;
             vw := '0' & vs + imm;
             i.addr  := vw(15 downto 0);
             i.state := st_load0;
           
           -- store [rd+imm], rs
           when OP_STORE =>
+            report "store [r" & str(i.rd) & " + " & hstr(imm) & "], r" & str(i.rs) severity note;
             vw := '0' & vd + imm;
             i.addr  := vw(15 downto 0);
             i.buff  := vs;
