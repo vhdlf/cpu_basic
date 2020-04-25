@@ -10,6 +10,8 @@ simulation/
 *.qws
 *.wlf
 *.rpt
+*.cf
+*.log
 
 # Prerequisites
 *.d
